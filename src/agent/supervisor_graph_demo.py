@@ -13,7 +13,6 @@ from langgraph.types import Command, interrupt
 from typing_extensions import TypedDict
 from agent.context_tools import search_relevant_files, summarizer
 from agent.runtime_config import RuntimeConfig
-from agent.constant import MEMBERS as members
 from agent.llm import llm
 from agent.prompt import (
     ISSUE_RESOLVE_PROBLEM_DECODER_SYSTEM_PROMPT,
@@ -54,6 +53,7 @@ dotenv.load_dotenv(
 
 # anthropic_llm = ChatAnthropic(model="claude-3-5-sonnet-latest")
 
+members = ["problem_decoder", "solution_mapper", "problem_solver"]
 options = members + ["FINISH"]
 
 
@@ -93,7 +93,7 @@ def supervisor_node(state: CustomState) -> Command:
     next_agent = response["next_agent"]
     goto = next_agent
 
-    goto = END if goto == "FINISH" else goto
+    goto = END if "FINISH" in goto else goto
     last_agent = state["last_agent"]
 
     if "human_in_the_loop" in state:
@@ -231,16 +231,6 @@ def problem_solver_node(state: CustomState) -> Command[Literal["supervisor"]]:
         if isinstance(msg, AIMessage):
             msg.name = "problem_solver"
 
-    # hot fix for github issue that does not adapt save_git_diff() tools
-    # TODO: remove this hot fix after save_git_diff is fixed
-    if "/issues/" in state["preset"]:
-        return Command(
-            update={
-                "messages": new_messages,
-                "last_agent": "problem_solver",
-            },
-            goto="supervisor",
-        )
 
     latest_patch = "Below is the latest code changes:\n" + save_git_diff()
     latest_patch = latest_patch.rstrip()
@@ -261,41 +251,20 @@ def problem_solver_node(state: CustomState) -> Command[Literal["supervisor"]]:
     )
 
 
-reviewer_agent = create_react_agent(
-    llm,
-    tools=reviewer_tools,
-    state_modifier=ISSUE_RESOLVE_REVIEWER_SYSTEM_PROMPT,
-    # prompt=REVIEWER_SYSTEM_PROMPT_SWE_VARIANT_WITH_PATCH
-)
-
-
-def reviewer_node(state: CustomState) -> Command[Literal["supervisor"]]:
-    result = reviewer_agent.invoke(state)
-    new_messages = result["messages"][len(state["messages"]) :]
-    # Add name to each AI message
-    for msg in new_messages:
-        if isinstance(msg, AIMessage):
-            msg.name = "reviewer"
-
-    return Command(
-        update={"messages": new_messages, "last_agent": "reviewer"},
-        goto="supervisor",
-    )
 
 
 memory = MemorySaver()
 builder = StateGraph(CustomState)
 builder.add_edge(START, "input_handler")
 builder.add_node("input_handler", input_handler_node)
-builder.add_node("supervisor", supervisor_node)
-builder.add_node("human_feedback", human_feedback_node)
-builder.add_node("problem_decoder", problem_decoder_node)
-builder.add_node("solution_mapper", solution_mapper_node)
-builder.add_node("problem_solver", problem_solver_node)
-builder.add_node("reviewer", reviewer_node)
+builder.add_node("human_feedback", human_feedback_node,destinations=("problem_decoder", "solution_mapper", "problem_solver"))
+builder.add_node("problem_decoder", problem_decoder_node,destinations=({"supervisor":"supervisor-decoder"}))
+builder.add_node("solution_mapper", solution_mapper_node,destinations=({"supervisor":"supervisor-mapper"}))
+builder.add_node("problem_solver", problem_solver_node,destinations=({"supervisor":"supervisor-solver"}))
+builder.add_node("supervisor", supervisor_node, destinations=("problem_decoder", "solution_mapper", "problem_solver", END))
 
 
-graph = builder.compile(checkpointer=memory)
+issue_resolve_graph = builder.compile(checkpointer=memory)
 
 
 # # %%

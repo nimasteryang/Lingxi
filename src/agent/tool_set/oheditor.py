@@ -13,7 +13,6 @@ from typing import Literal, get_args
 from agent.tool_set.linter import DefaultLinter
 from agent.tool_set.utils import run_shell_local, maybe_truncate
 from agent.tool_set.constant import *
-from agent.sepl_tools import parse_content_structure
 from agent import runtime_config
 # from agent.tool_set.edit_history import FileHistoryManager
 
@@ -295,9 +294,7 @@ class OHEditor:
         if not view_range:
             file_content = self.read_file(path)
             output = self._make_output(file_content, str(path), start_line)
-            if len(file_content) >= MAX_RESPONSE_LEN_CHAR:
-                print(f"{path=}")
-                output += "Below is the file structure of the file:\n" + parse_content_structure(file_content)
+            
             return CLIResult(
                 output=output,
                 path=str(path),

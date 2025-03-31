@@ -1,5 +1,5 @@
 [project]
-name = "codexray"
+name = "codexray_lite"
 version = "0.1.1"
 description = "CodeXRay Lite for a multi-agent software engineering tasks automation framework"
 authors = [
@@ -36,6 +36,7 @@ dependencies = [
     "diskcache",
     "langchain_deepseek>=0.1.2",
     "langgraph-checkpoint-sqlite",
+    "grep-ast",
 ]
 
 

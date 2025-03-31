@@ -216,48 +216,6 @@ if __name__ == "__main__":
         for func in class_and_func:
             print(func)
             print("-"*100)
-    # file_structure_map, file_content_map = repo_knowledge.map_file_to_class_and_functions('/Users/xuyang/Documents/GitHub/codexray/src/agent/tool_set')
-    # print(file_structure_map)
-    # for content in file_structure_map['oheditor.py']:
-        # print(content)
-        # print("-"*100)
-    # print(file_content_map['edit_tool.py'])
-
-    # PY_LANGUAGE = Language(tspython.language())
-    # JAVA_LANGUAGE = Language(tsjava.language())
-
-    # parsers = {
-    #     "py": Parser(PY_LANGUAGE),
-    #     "java": Parser(JAVA_LANGUAGE),
-    # }
-    # parser = parsers["py"]
-    # with open("./graph_with_context_manager.py", "r+", encoding="latin-1") as file:
-    #     content = file.read()
-    # tree = parser.parse(content.encode())
-    # py_func_defs = PY_LANGUAGE.query(
-    #     """(function_definition) @func_defs
-    #     """
-    # )
-    # py_func_details = PY_LANGUAGE.query(
-    #     """
-    #         name: (identifier) @func_name
-    #         parameters: (parameters) @func_args
-    #         body: (block) @func_block
-    #     """
-    # )
-    # func_defs = py_func_defs.captures(tree.root_node).get("func_defs", [])
-    # print(func_defs)
-    # for func_def in func_defs:
-    #     func_details = py_func_details.captures(func_def)
-    #     func_name = func_details.get("func_name", [])
-    #     if func_name:
-    #         func_name = func_name[0].text.decode()
-    #     print(func_name)
-
-    import pdb
-
-    # pdb.set_trace()
-
 
 
 # %%

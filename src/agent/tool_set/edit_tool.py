@@ -98,8 +98,7 @@ def str_replace_editor(
 
 if __name__ == "__main__":
     rc = runtime_config.RuntimeConfig()
-    # rc.load_from_preset("gitpython-developers+GitPython@1413.yaml")
-    rc.load_from_swe_docker_instance("django__django-15814")  # from one of the easy instances
+    rc.load_from_preset("gitpython-developers+GitPython@1413.yaml")
     print("=" * 50)
     rc.pretty_print_runtime()
     print("=" * 50)

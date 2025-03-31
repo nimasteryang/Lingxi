@@ -372,81 +372,6 @@ def view_directory_path(path: Annotated[str, "File path relative to git root"]) 
 
 
 @tool
-def view_file_structure(
-    file_path: Annotated[
-        str,
-        "Path to a Python file relative to the project root (e.g., 'src/main.py')"
-    ]
-) -> str:
-    """Extracts and displays the hierarchical structure of a Python file. Ideally suited for files that are too large to view directly.
-    
-    Parses the specified Python file and returns a formatted representation of:
-    - Classes with line numbers and docstrings
-    - Methods with parameters, line numbers, and docstrings
-    - Functions with parameters, line numbers, and docstrings
-    
-    Line numbers can help identify the exact range of code within a file, which can then be viewed using the `view` command with range in the `str_replace_editor` tool.
-    
-    The indentation in the output indicates the nesting level:
-    
-    Class: ClassName (line X)
-    -- Doc: Class docstring
-    -- Method: method_name(param1, param2) (line Y)
-    ---- Doc: Method docstring
-    Function: function_name(param1, param2) (line Z)
-    -- Doc: Function docstring
-    
-    Args:
-        file_path: Path to a Python file relative to the project root. Must point to an existing .py file.
-    
-    Returns:
-        A formatted string representing the file's structure with indentation showing the hierarchy.
-    """
-
-    # if not python file, return error message
-    if not file_path.endswith('.py'):
-        return "View file structure failed. Currenly only support python file."
-
-    rc = runtime_config.RuntimeConfig()
-    assert rc.initialized
-    print('view file structure: path:%s file_name="%s"' % (runtime_config.RuntimeConfig().proj_path, file_path))
-
-    if rc.runtime_type == RuntimeType.LOCAL:
-        full_file_path = os.path.join(rc.proj_path, file_path)
-        if not os.path.isfile(full_file_path):
-            raise ValueError(f"file_name: '{file_path}' doesn't exist!")
-        with open(full_file_path, encoding="utf-8") as f:
-            file_content = f.read()  # FIXME : add line number
-    if rc.runtime_type == RuntimeType.DOCKER:
-        file_content = rc.docker_container.exec_run(f"cat {file_path}", tty=True, stdin=True)
-        file_content = file_content.output.decode("utf-8")
-
-    return parse_content_structure(file_content)
-
-def parse_content_structure(file_content):
-    tree = ast.parse(file_content)
-    outline_str = ""
-    for node in ast.iter_child_nodes(tree):
-        if isinstance(node, ast.ClassDef):
-            class_name = f"Class: {node.name} (line {node.lineno})"
-            class_doc = ast.get_docstring(node) or None
-            outline_str += f"{class_name}\n-- Doc: {class_doc}\n" if class_doc else f"{class_name}\n"
-            for n in node.body:
-                if isinstance(n, ast.FunctionDef):
-                    method_args = [arg.arg for arg in n.args.args]
-                    method_name = f"-- Method: {n.name}({', '.join(method_args)}) (line {n.lineno})"
-                    method_doc = ast.get_docstring(n) or None
-                    outline_str += f"{method_name}\n---- Doc: {method_doc}\n" if method_doc else f"{method_name}\n"
-
-        elif isinstance(node, ast.FunctionDef):
-            func_args = [arg.arg for arg in node.args.args]
-            func_name = f"Function: {node.name}({', '.join(func_args)}) (line {node.lineno})"
-            func_doc = ast.get_docstring(node) or None
-            outline_str += f"{func_name}\n-- Doc: {func_doc}\n" if func_doc else f"{func_name}\n"
-
-    return outline_str
-
-@tool
 def view_file_content(
     file_name: Annotated[
         str,
@@ -485,16 +410,8 @@ def view_file_content(
             else:
                 lines = [f"{i + 1}\t{line}" for i, line in enumerate(lines)]
             file_content = "".join(lines)
-    if rc.runtime_type == RuntimeType.DOCKER:
-        if view_range:
-            start_line, end_line = view_range
-            # Use /bin/sh -c to ensure proper shell parsing of the pipe
-            command = f"/bin/sh -c 'sed -n {start_line},{end_line}p {file_name} | cat '"
-        else:
-            command = f"cat -n {file_name}"
-        # file_content_no_decode = rc.docker_container.exec_run(command, tty=True, stdin=True)
-        file_content = rc.docker_container.exec_run(command, tty=False, stdin=True)
-        file_content = file_content.output.decode("utf-8")
+    else:
+        raise NotImplementedError
 
     # FILE_CONTENT_TRUNCATED_NOTICE = '<response clipped><NOTE>Due to the max output limit, only part of this file has been shown to you. You should retry this tool after you have searched inside the file with the `search_file_by_keywords` tool or `view_file_structure` tool in order to find the line numbers of what you are looking for, and then use this tool with view_range.</NOTE>'
     FILE_CONTENT_TRUNCATED_NOTICE = '<response clipped><NOTE>Due to the max output limit, only part of this file has been shown to you. You should retry this tool after you have searched inside the file with the `search_file_by_keywords` tool or view the file structure below in order to find the line numbers of what you are looking for, and then use this tool with view_range.</NOTE>'
@@ -510,9 +427,6 @@ def view_file_content(
         snippet_content = "\n".join(
             [f"{i + start_line:6}\t{line}" for i, line in enumerate(snippet_content.split("\n"))]
         )
-        
-    if truncated:
-        snippet_content += "\n\nBelow is the file structure of the file:\n" + view_file_structure.invoke({'file_path': file_name})
 
     return snippet_content
 
@@ -591,57 +505,8 @@ def apply_git_diff(patch):
 
     if rc.runtime_type == RuntimeType.LOCAL:
         return apply_git_diff_local(patch)
-    assert rc.docker_container
-
-    container = rc.docker_container
-
-    misc_ident = str(uuid.uuid1())
-    tmp_patch_name = f"tmp_patch_{misc_ident[:4]}.patch"
-
-    tmp_f_name = Path(f"{RUNTIME_DIR}/tmp/{tmp_patch_name}")
-    dest_f_name = Path(f"/tmp/{tmp_patch_name}")
-
-    os.makedirs(tmp_f_name.parent, exist_ok=True)
-
-    with open(tmp_f_name, "w", encoding="utf-8") as f:
-        f.write(patch)
-
-    copy_to_container(container, tmp_f_name, dest_f_name)
-
-    GIT_APPLY_CMDS = [
-        "git apply --verbose",
-        "git apply --verbose --reject",
-        "patch --batch --fuzz=5 -p1 -i",
-    ]
-
-    for git_apply_cmd in GIT_APPLY_CMDS:
-        print(f"Trying applying patch with {git_apply_cmd!r}")
-        val = container.exec_run(f"{git_apply_cmd} /tmp/{tmp_patch_name}")
-        if val.exit_code == 0:
-            # print(f"{APPLY_PATCH_PASS}:\n{val.output.decode(UTF8)}")
-            applied_patch = True
-            return 0, "Patch successfully applied"
-        else:
-            print(f"Failed to apply patch to container: {git_apply_cmd}")
-    return -2, "Patch failed to apply"
-
-
-def extract_git_diff_container():
-    rc = runtime_config.RuntimeConfig()
-    print("extracting git diff docker")
-    rc.pretty_print_runtime()
-    assert rc.initialized
-    assert rc.docker_container
-    assert rc.runtime_type == runtime_config.RuntimeType.DOCKER
-    container = rc.docker_container
-
-    git_diff_output_before = (
-        container.exec_run("git -c core.fileMode=false diff --exit-code --no-color")
-        .output.decode("utf-8")
-        .strip()
-    )
-    return git_diff_output_before
-
+    else:
+        raise NotImplementedError
 
 def extract_git_diff_local():
     rc = runtime_config.RuntimeConfig()
@@ -669,14 +534,9 @@ def save_git_diff():
     print("Saving git diff")
     rc = runtime_config.RuntimeConfig()
 
-    if rc.runtime_type == RuntimeType.DOCKER:
-        git_diff_output_before = extract_git_diff_container()
-        instance_id = rc.swe_instance["instance_id"]
-    elif rc.runtime_type == RuntimeType.LOCAL:
-        git_diff_output_before = extract_git_diff_local()
-        instance_id = rc.proj_name.replace("/", "+")
-    else:
-        raise NotImplementedError
+    
+    git_diff_output_before = extract_git_diff_local()
+    instance_id = rc.proj_name.replace("/", "+")
 
     patch_path = os.path.join(PATCH_RESULT_DIR, instance_id + "@" + str(int(time.time()))) + ".patch"
 
@@ -684,55 +544,6 @@ def save_git_diff():
         save_file.write(git_diff_output_before)
     # print(f"Saved patch content to {patch_path}")
     return git_diff_output_before
-
-
-# %%
-@tool
-def run_swe_bench_eval():
-    """
-    Run evaluation for the project. When this function is called, it assumes a
-    previous function call to save_patch_content is made succesfully, and the
-    tests will be evaluated on the previous saved patch content.
-    """
-    rc = runtime_config.RuntimeConfig()
-    if not rc.swe_instance:
-        return "`run_swe_bench_eval` is currently not supported, please avoid calling this tool anymore."
-    assert rc.swe_instance
-
-    # run swe_eval test result
-    eval_script_path = os.path.join(
-        os.path.dirname(__file__), "eval_scripts", rc.swe_instance["instance_id"] + "@eval.sh"
-    )
-    assert os.path.isfile(eval_script_path), f"{eval_script_path!r} does not exist!"
-
-    eval_script_path = Path(eval_script_path)
-    docker_dest_name = Path(f"/tmp/{rc.swe_instance['instance_id']}@eval.sh")
-
-    copy_to_container(rc.docker_container, eval_script_path, docker_dest_name)
-    rc.docker_container.exec_run("chmod +x " + str(docker_dest_name), tty=True, stdin=True)
-
-    command_output = docker_run_with_timeout(rc.docker_container, [str(docker_dest_name)], 300)
-
-    # concentrate on only test output
-    test_start_line = "+ : '>>>>> Start Test Output'"
-    test_end_line = "+ : '>>>>> End Test Output'"
-
-    # TODO strip color information
-    processed_output = []
-    keep = False
-    valid = False
-    for line in command_output.splitlines():
-        if keep:
-            processed_output.append(line)
-        if line.startswith(test_start_line):
-            keep = True
-            valid = True
-        if line.startswith(test_end_line):
-            keep = False
-
-    processed_output = "\n".join(processed_output[:-1])
-
-    return processed_output if valid else command_output
 
 
 # %%
@@ -766,11 +577,8 @@ def run_shell_cmd(
         out, err = process.communicate("\n".join(commands))
         return out
 
-    if rc.runtime_type == RuntimeType.DOCKER:
-        cmd_output = docker_run_with_timeout(rc.docker_container, commands, 300)
-        return cmd_output
-    
-
+    else:
+        raise NotImplementedError
 if __name__ == "__main__":
     rc = runtime_config.RuntimeConfig()
     rc.load_from_github_issue_url("https://github.com/gitpython-developers/GitPython/issues/1977")
@@ -794,3 +602,5 @@ if __name__ == "__main__":
     # print(apply_git_diff(PLACE_HOLDER_PATCH))
 
     # print(extract_git_diff_local())
+
+# %%

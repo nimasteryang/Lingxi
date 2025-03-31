@@ -6,13 +6,9 @@ from tree_sitter import Language, Parser
 
 RUNTIME_DIR = os.path.join(os.environ["HOME"], "Tmp", "swe-runtime")
 
-DOCKER_MAP_DIR = os.path.join(RUNTIME_DIR, "docker_map")
-os.makedirs(DOCKER_MAP_DIR, exist_ok=True)
-
 PRESET_DIR = os.path.join(os.path.dirname(__file__), "presets/")
 PRESET_OPTIONS = os.listdir(PRESET_DIR)
 
-MEMBERS = ["problem_decoder", "solution_mapper", "problem_solver", "reviewer"]
 
 CHECKPOINTER_DB = os.path.join(RUNTIME_DIR, "checkpointer.db")
 

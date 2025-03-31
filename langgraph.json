@@ -1,7 +1,8 @@
 {
   "dependencies": ["."],
   "graphs": {
-    "issue_resolve_graph": "./src/agent/issue_resolve_graph.py:graph"
+    "issue_resolve_graph": "./src/agent/supervisor_graph_demo.py:issue_resolve_graph",
+    "hierarchy_graph": "./src/agent/hierarchy_graph_demo.py:hierarchy_graph"
   },
   "env": ".env"
 }

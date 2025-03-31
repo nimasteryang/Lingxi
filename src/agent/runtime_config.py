@@ -64,8 +64,6 @@ class RuntimeConfig:
     commit_head = None
 
     runtime_type: RuntimeType = None
-    docker_container = None
-    swe_instance = None
 
     def __new__(cls, force_new_instance=False):
         if cls._instance is None or force_new_instance:
