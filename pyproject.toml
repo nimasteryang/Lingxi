@@ -1,0 +1,86 @@
+[project]
+name = "codexray"
+version = "0.1.1"
+description = "CodeXRay Lite for a multi-agent software engineering tasks automation framework"
+authors = [
+    { name = "Xu Yang" },
+    { name = "Wenhan Zhu" },
+    { name = "Michael Pacheco" },
+    { name = "Jiayuan Zhou" },
+]
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.9"
+dependencies = [
+    "langgraph>=0.2.75",
+    "langsmith",
+    "langgraph-cli[inmem]",
+    "langchain_anthropic>=0.3.8",
+    "langchain_openai",
+    "langchain_community",
+    "langchain_chroma",
+    "langchain_experimental",
+    "prompt_toolkit",
+    "docker",
+    "gitpython",
+    "ruff",
+    "pre-commit",
+    "pytest",
+    "python-dotenv>=1.0.1",
+    "datasets",
+    "tree-sitter",
+    "tree-sitter-languages",
+    "tree-sitter-python",
+    "tree-sitter-java",
+    "chromadb",
+    "diskcache",
+    "langchain_deepseek>=0.1.2",
+    "langgraph-checkpoint-sqlite",
+]
+
+
+[project.optional-dependencies]
+dev = ["mypy>=1.11.1", "ruff>=0.6.1"]
+
+[build-system]
+requires = ["setuptools>=73.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["langgraph.templates.agent", "agent"]
+[tool.setuptools.package-dir]
+"langgraph.templates.agent" = "src/agent"
+"agent" = "src/agent"
+
+
+[tool.setuptools.package-data]
+"*" = ["py.typed"]
+
+[tool.ruff]
+lint.select = [
+    "E",    # pycodestyle
+    "F",    # pyflakes
+    "I",    # isort
+    # "D",    # pydocstyle
+    # "D401", # First line should be in imperative mood
+    # "T201", # W `print` found
+    "UP",
+]
+lint.ignore = [
+    "UP006",
+    "UP007",
+    # We actually do want to import from typing_extensions
+    "UP031", # str formatter
+    "UP035",
+    # Relax the convention by _not_ requiring documentation for every function parameter.
+    "D417",
+    "E501",
+    "E402", # import at top
+    "F841", # unused variable
+    # "W503",  # black's recommended settings
+]
+line-length=109
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["D", "UP"]
+[tool.ruff.lint.pydocstyle]
+convention = "google"

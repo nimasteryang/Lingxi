@@ -1,0 +1,5 @@
+!!python/object:agent.utils.ConfigPreset
+project_name: "phuongvinguyen/guice"
+issue_id: -1  
+checkout_commit: 'b99db1eca930058f7b55f5ccb1cc1388ea7b98ad' 
+issue_description: >

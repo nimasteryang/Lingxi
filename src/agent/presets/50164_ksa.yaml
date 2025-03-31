@@ -1,0 +1,5 @@
+!!python/object:agent.utils.ConfigPreset
+project_name: "phytomichael/KSA1"
+issue_id: -1  
+checkout_commit: '7d8a1243b5341d5bd6f96952a446dd786e9a0e76' 
+issue_description: >

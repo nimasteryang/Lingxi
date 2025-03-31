@@ -1,0 +1,22 @@
+!!python/object:agent.utils.ConfigPreset
+project_name: "gitpython-developers/GitPython"
+issue_id: 1413
+checkout_commit: ''
+issue_description: >
+  Current we can get status for the commit (comparing parent). But can't get patch text.
+
+  I would like to have commit.patch to get patch text. Result will be similar to git diff shell command.
+  ```
+  git diff <c1> <c2>
+  ```
+  
+  ```
+  all_commits = repo.iter_commits('master')
+  for commit in all_commits:
+      print(commit.stats)
+  ```
+
+  If the community is okay with this addition, i can work on this and raise a PR.
+
+  Thanks in advance,
+  Durai Pandian

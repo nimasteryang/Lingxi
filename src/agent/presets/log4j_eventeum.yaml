@@ -1,0 +1,6 @@
+!!python/object:agent.utils.ConfigPreset
+project_name: "eventeum/eventeum"
+issue_id: -1  
+checkout_commit: '9e116cb0dd283d5c2d3750ef6643a0716266b495' 
+# parent commit of fix https://github.com/ant-media/StreamApp/commit/abc3f51d34529dc2c3cdba5d578c2d7655c2f159 
+issue_description: >
