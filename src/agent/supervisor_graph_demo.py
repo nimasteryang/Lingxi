@@ -89,7 +89,7 @@ def input_handler_node(state: CustomState) -> Command[Literal["supervisor"]]:
     )
 
 
-def supervisor_node(state: CustomState) -> Command:
+def supervisor_node(state: CustomState) -> Command[Literal["problem_decoder", "solution_mapper", "problem_solver", "human_feedback", END]]:
     messages = [
         {"role": "system", "content": ISSUE_RESOLVE_SUPERVISOR_SYSTEM_PROMPT},
     ] + state["messages"]
@@ -260,17 +260,17 @@ def problem_solver_node(state: CustomState) -> Command[Literal["supervisor"]]:
 
 
 memory = MemorySaver()
-builder = StateGraph(CustomState)
-builder.add_edge(START, "input_handler")
-builder.add_node("input_handler", input_handler_node, destinations=({"supervisor":"supervisor-input_handler"}))
-builder.add_node("human_feedback", human_feedback_node,destinations=("problem_decoder", "solution_mapper", "problem_solver"))
-builder.add_node("problem_decoder", problem_decoder_node,destinations=({"supervisor":"supervisor-decoder"}))
-builder.add_node("solution_mapper", solution_mapper_node,destinations=({"supervisor":"supervisor-mapper"}))
-builder.add_node("problem_solver", problem_solver_node,destinations=({"supervisor":"supervisor-solver"}))
-builder.add_node("supervisor", supervisor_node, destinations=("problem_decoder", "solution_mapper", "problem_solver", END))
+supervisor_builder = StateGraph(CustomState)
+supervisor_builder.add_edge(START, "input_handler")
+supervisor_builder.add_node("input_handler", input_handler_node, destinations=({"supervisor":"input_handler-supervisor"}))
+supervisor_builder.add_node("human_feedback", human_feedback_node, destinations=({"problem_decoder":"human_feedback-problem_decoder", "solution_mapper":"human_feedback-solution_mapper", "problem_solver":"human_feedback-problem_solver"}))
+supervisor_builder.add_node("problem_decoder", problem_decoder_node, destinations=({"supervisor":"decoder-supervisor"}))
+supervisor_builder.add_node("solution_mapper", solution_mapper_node, destinations=({"supervisor":"mapper-supervisor"}))
+supervisor_builder.add_node("problem_solver", problem_solver_node, destinations=({"supervisor":"solver-supervisor"}))
+supervisor_builder.add_node("supervisor", supervisor_node, destinations=({"human_feedback":"supervisor-human_feedback", "problem_decoder":"supervisor-decoder", "solution_mapper":"supervisor-mapper", "problem_solver":"supervisor-solver", END:"END"}))
 
 
-issue_resolve_graph = builder.compile(checkpointer=memory)
+issue_resolve_graph = supervisor_builder.compile(checkpointer=memory)
 
 
 # # %%
