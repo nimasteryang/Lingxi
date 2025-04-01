@@ -45,7 +45,7 @@ dotenv.load_dotenv(
 
 class MamRouter(TypedDict):
     """Worker to route to next. If no workers needed, route to FINISH."""
-    options = ["issue_resolve_graph", "reviewer_node", "FINISH"]
+    options = ["issue_resolver", "reviewer", "FINISH"]
     next_agent: Literal[*options]
     thought: str
 
@@ -57,10 +57,15 @@ def mam_node(state: CustomState) -> Command[Literal["issue_resolve_graph", "revi
     response = llm.with_structured_output(MamRouter, strict=True).invoke(messages)
 
     next_agent = response["next_agent"]
-    goto = next_agent
-
-    goto = END if "FINISH" in goto else goto
-    
+    print(f"Next agent: {next_agent}")
+    if "reviewer" in next_agent:
+        goto = "reviewer_node"
+    elif "issue_resolver" in next_agent:
+        goto = "issue_resolve_graph"
+    elif "FINISH" in next_agent:
+        goto = END
+    else:
+        raise ValueError(f"Invalid next agent: {next_agent}")
 
     return Command(
         update={

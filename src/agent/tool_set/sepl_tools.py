@@ -405,7 +405,7 @@ def view_file_content(
             if view_range:
                 start_line, end_line = view_range
                 lines = lines[start_line - 1 : end_line]
-                lines = [f"{i + start_line}\t{line}" for i, line in enumerate(lines)]
+                lines = [f"{line}" for i, line in enumerate(lines)]
             else:
                 lines = [f"{i + 1}\t{line}" for i, line in enumerate(lines)]
             file_content = "".join(lines)
