@@ -7,26 +7,22 @@ location to store all configuration information
 import os
 from enum import Enum
 
-import yaml
 from dotenv import load_dotenv
 from git import Repo
-from prompt_toolkit import prompt
-from prompt_toolkit.completion import FuzzyWordCompleter
 
 from agent.constant import RUNTIME_DIR
 from agent.tool_set.sepl_tools import extract_git_diff_local
-from agent.tool_set.sepl_tools import apply_git_diff
 
 
 class RuntimeType(Enum):
     LOCAL = 1, "LOCAL"
-    
+
     def __int__(self):
         return self.value[0]
-    
+
     def __str__(self):
         return self.value[1]
-    
+
     @classmethod
     def _missing_(cls, value):
         if isinstance(value, int):
@@ -36,9 +32,10 @@ class RuntimeType(Enum):
         raise ValueError(f"{value} is not a valid {cls.__name__}")
 
 
-
 def load_env_config():
-    env_file = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), ".env")
+    env_file = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(__file__))), ".env"
+    )
     load_dotenv(env_file)
 
 
@@ -86,34 +83,6 @@ class RuntimeConfig:
         self.initialized = True
         self.runtime_type = RuntimeType.LOCAL
         self.runtime_setup()
-
-    def load_from_preset(self, preset):
-        assert preset in PRESET_OPTIONS
-
-        print(f"Loading preset: `{preset}`")
-
-        with open(os.path.join(PRESET_DIR, preset)) as f:
-            preset_data = yaml.unsafe_load(f)
-
-        self.preset = preset
-
-        self.proj_name = preset_data.project_name
-        self.proj_path = os.path.join(self.runtime_dir, self.proj_name)
-
-        self.issue_desc = preset_data.issue_description
-        self.commit_head = preset_data.checkout_commit
-
-        self.initialized = True
-        self.runtime_type = RuntimeType.LOCAL
-        self.runtime_setup()
-
-    def load_from_dynamic_select_preset(self):
-        preset_options = FuzzyWordCompleter(
-            PRESET_OPTIONS,
-        )
-        preset_selected = prompt("Select a present:", completer=preset_options)
-        assert preset_selected in PRESET_OPTIONS
-        self.load_from_preset(preset_selected)
 
     def load_from_github_issue_url(self, issue_url):
         from agent.github_utils import (
@@ -165,7 +134,9 @@ class RuntimeConfig:
             try:
                 repo.git.checkout(self.commit_head)
             except Exception:
-                print(f"[E] Unable to checkout commit for {self.proj_name}\n\tUsing default commit")
+                print(
+                    f"[E] Unable to checkout commit for {self.proj_name}\n\tUsing default commit"
+                )
 
         # reset repo
         repo.git.reset("--hard")
@@ -201,20 +172,6 @@ class RuntimeConfig:
             "path": self.proj_path,
             "patch": extract_git_diff(),
         }
-
-    def load_from_dump_config(self, config):
-        if config["runtime_type"] == int(RuntimeType.LOCAL):
-            if config["preset"]:
-                print("=== Loading config with preset")
-                self.load_from_preset(config["preset"])
-            else:
-                print("=== Loading config with local path")
-                self.load_from_local(config["path"])
-
-        print("Applying diff from dump config")
-        print(config["patch"])
-        print("*" * 50)
-        apply_git_diff(config["patch"])
 
     def pretty_print_runtime(self):
         if self.runtime_type == RuntimeType.LOCAL:

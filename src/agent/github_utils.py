@@ -5,6 +5,8 @@ import re
 import dotenv
 import requests
 
+from agent.constant import REQUEST_TIMEOUT
+
 # load dotenv
 
 dotenv.load_dotenv(
@@ -43,7 +45,7 @@ def parse_github_issue_url(issue_url):
 def get_issue_description(owner, project, issue):
     issue_api_url = f"https://api.github.com/repos/{owner}/{project}/issues/{issue}"
 
-    response = requests.get(issue_api_url, headers=headers)
+    response = requests.get(issue_api_url, headers=headers, timeout=REQUEST_TIMEOUT)
 
     # Check for successful response (HTTP status 200)
     if response.status_code == 200:
@@ -59,14 +61,14 @@ def get_issue_description(owner, project, issue):
 
 # Fetch issue events to find the one that closed the issue
 def get_issue_events(url_):
-    response = requests.get(url_, headers=headers)
+    response = requests.get(url_, headers=headers, timeout=REQUEST_TIMEOUT)
     response.raise_for_status()  # Raise an error for bad responses
     return response.json()
 
 
 # Fetch issue details to check for a linked PR
 def get_issue_details(url_):
-    response = requests.get(url_, headers=headers)
+    response = requests.get(url_, headers=headers, timeout=REQUEST_TIMEOUT)
     response.raise_for_status()  # Raise an error for bad responses
     return response.json()
 
@@ -84,7 +86,7 @@ def get_issue_close_commit(owner, project, issue):
         logger.info(f"Pull Request that closed the issue: {pr_url}")
 
         # Fetch the pull request details
-        pr_response = requests.get(pr_url, headers=headers)
+        pr_response = requests.get(pr_url, headers=headers, timeout=REQUEST_TIMEOUT)
         pr_response.raise_for_status()
         pr_details = pr_response.json()
 

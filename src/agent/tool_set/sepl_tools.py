@@ -1,10 +1,10 @@
 import os
+from pathlib import Path
 import subprocess
 import time
 import uuid
-from pathlib import Path
 from typing import Annotated, List, Optional
-import ast
+
 from git import Repo
 from langchain_core.tools import tool
 from langchain_core.runnables import RunnableConfig
@@ -14,6 +14,7 @@ from agent.constant import PATCH_RESULT_DIR, RUNTIME_DIR
 
 MAX_LIST_FILES = 50  # the maximum number of files to return
 MAX_RESPONSE_LEN_CHAR: int = 32000
+
 
 def prepare_input_dir(in_dir):
     rc = runtime_config.RuntimeConfig()
@@ -30,6 +31,7 @@ def prepare_output_dir(out_dir):
 
     return out_dir.replace(rc.proj_path + "/", "")
 
+
 @tool
 def search_files_by_keywords(directory: str, keywords: list[str]):
     """
@@ -42,43 +44,48 @@ def search_files_by_keywords(directory: str, keywords: list[str]):
     Returns:
         dict: A dictionary where each keyword/pattern maps to a list of file paths and their corresponding line ranges that match the search.
     """
-    
+
     # Input validation
     if not keywords:
         return "ArgumentError: The keywords must be a non-empty list"
-    
+
     if len(keywords) > 10:
         return "ArgumentError: The number of keywords must be less than 10"
-    
+
     for keyword in keywords:
         if len(keyword) < 3:
             return f"ArgumentError: The keyword '{keyword}' must be at least 3 characters long"
-    
+
     # Normalize the directory path - using the original prepare_input_dir function
     directory = prepare_input_dir(directory)
-    
+
     # Check if ripgrep is installed
     try:
-        subprocess.run(["rg", "--version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+        subprocess.run(
+            ["rg", "--version"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=True,
+        )
     except (subprocess.SubprocessError, FileNotFoundError):
         return "Error: ripgrep is not installed or not available in PATH. Please install ripgrep for this tool to work."
-    
+
     # Make sure directory exists
     if not os.path.exists(directory):
         return f"Error: Directory or file '{directory}' does not exist"
-    
+
     # Initialize results dictionary
     results = {}
-    
+
     # Search for each keyword
     for keyword in keywords:
         print(f"Searching for regex pattern: {keyword}")
         matching_files = []
-        
+
         try:
             # Build ripgrep command for content search
             rg_cmd = ["rg", "--line-number"]
-            
+
             # Add filename matching capability (search in filenames too)
             if os.path.isfile(directory):
                 # Check if the filename contains the keyword
@@ -88,30 +95,30 @@ def search_files_by_keywords(directory: str, keywords: list[str]):
                 try:
                     file_pattern_cmd = ["rg", "--files", "-g", f"*{keyword}*"]
                     file_proc = subprocess.run(
-                        file_pattern_cmd + [directory], 
-                        stdout=subprocess.PIPE, 
+                        file_pattern_cmd + [directory],
+                        stdout=subprocess.PIPE,
                         stderr=subprocess.PIPE,
                         text=True,
-                        check=False
+                        check=False,
                     )
                     # Add files that match by name
                     for file_path in file_proc.stdout.splitlines():
                         matching_files.append(prepare_output_dir(file_path))
                 except subprocess.SubprocessError as e:
                     print(f"Error searching filenames: {e}")
-            
+
             # Content search command
             search_target = directory
-            
+
             # Execute ripgrep for content search
             process = subprocess.run(
                 rg_cmd + [keyword, search_target],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
-                check=False
+                check=False,
             )
-            
+
             # Process the output
             file_line_map = {}
             for line in process.stdout.splitlines():
@@ -119,34 +126,43 @@ def search_files_by_keywords(directory: str, keywords: list[str]):
                     parts = line.split(":", 2)
                     if len(parts) >= 2:
                         file_path, line_number = parts[0], int(parts[1])
-                        
+
                         if file_path not in file_line_map:
-                            file_line_map[file_path] = {"first": line_number, "last": line_number}
+                            file_line_map[file_path] = {
+                                "first": line_number,
+                                "last": line_number,
+                            }
                         else:
                             file_line_map[file_path]["last"] = line_number
                 except Exception as e:
                     print(f"Error processing line '{line}': {e}")
-            
+
             # Format results
             for file_path, line_info in file_line_map.items():
                 output_path = prepare_output_dir(file_path)
                 if line_info["first"] == line_info["last"]:
                     matching_files.append(f"{output_path}: line {line_info['first']}")
                 else:
-                    matching_files.append(f"{output_path}: line {line_info['first']}-{line_info['last']}")
-                    
+                    matching_files.append(
+                        f"{output_path}: line {line_info['first']}-{line_info['last']}"
+                    )
+
                 # Check if we've reached the maximum files limit
                 if len(matching_files) >= MAX_LIST_FILES:
-                    matching_files.insert(0, f"Note: Too many files found. Only the first {MAX_LIST_FILES} files are returned, please narrow down your search")
+                    matching_files.insert(
+                        0,
+                        f"Note: Too many files found. Only the first {MAX_LIST_FILES} files are returned, please narrow down your search",
+                    )
                     break
-                    
+
         except Exception as e:
             matching_files.append(f"Error: {str(e)}")
-        
+
         results[keyword] = matching_files
         print(f"Search for '{keyword}' found {len(matching_files)} results")
-    
+
     return results
+
 
 @tool
 def search_files_by_name_or_content(directory, substring):
@@ -192,7 +208,8 @@ def search_files_by_name_or_content(directory, substring):
                 if found_substring:
                     if first_occurrence_line_number == last_occurrence_line_number:
                         matching_files.append(
-                            prepare_output_dir(directory) + f": line {first_occurrence_line_number}"
+                            prepare_output_dir(directory)
+                            + f": line {first_occurrence_line_number}"
                         )
                     else:
                         matching_files.append(
@@ -227,9 +244,13 @@ def search_files_by_name_or_content(directory, substring):
                                     first_occurrence_line_number = line_number
                                 last_occurrence_line_number = line_number
                         if found_substring:
-                            if first_occurrence_line_number == last_occurrence_line_number:
+                            if (
+                                first_occurrence_line_number
+                                == last_occurrence_line_number
+                            ):
                                 matching_files.append(
-                                    prepare_output_dir(file_path) + f": line {first_occurrence_line_number}"
+                                    prepare_output_dir(file_path)
+                                    + f": line {first_occurrence_line_number}"
                                 )
                             else:
                                 matching_files.append(
@@ -239,7 +260,10 @@ def search_files_by_name_or_content(directory, substring):
                 except Exception as e:
                     print(f"Skipping {file_path}: {e}")
 
-    print("search_files_by_name_or_content Input: %s Output:[%s]" % (substring, len(matching_files)))
+    print(
+        "search_files_by_name_or_content Input: %s Output:[%s]"
+        % (substring, len(matching_files))
+    )
 
     if len(matching_files) > MAX_LIST_FILES:
         return [
@@ -308,9 +332,15 @@ def view_directory(dir_path: str = "./", depth: Optional[int] = None) -> List[st
     # Function to filter entries by depth
     def filter_entries(max_depth: Optional[int]) -> List[str]:
         # Filter files
-        filtered_files = [path for path, d in all_files if (max_depth is None) or (d <= max_depth)]
+        filtered_files = [
+            path for path, d in all_files if (max_depth is None) or (d <= max_depth)
+        ]
         # Filter directories
-        filtered_dirs = [dir_path for dir_path, d in all_dirs if (max_depth is None) or (d <= max_depth)]
+        filtered_dirs = [
+            dir_path
+            for dir_path, d in all_dirs
+            if (max_depth is None) or (d <= max_depth)
+        ]
         # Combine and deduplicate
         entries = list(set(filtered_dirs + filtered_files))
         return sorted(entries)  # Alphabetical order
@@ -324,23 +354,32 @@ def view_directory(dir_path: str = "./", depth: Optional[int] = None) -> List[st
     start_depth = (
         depth
         if depth is not None
-        else max(max((d for _, d in all_files), default=0), max((d for _, d in all_dirs), default=0))
+        else max(
+            max((d for _, d in all_files), default=0),
+            max((d for _, d in all_dirs), default=0),
+        )
     )
 
     for d in range(start_depth, -1, -1):
         adjusted_entries = filter_entries(d)
         if len(adjusted_entries) <= 50:
             print(f"Note: Reduced depth to {d} with {len(adjusted_entries)} entries")
-            return [f"Note: Reduced depth to {d} with {len(adjusted_entries)} entries"] + adjusted_entries
+            return [
+                f"Note: Reduced depth to {d} with {len(adjusted_entries)} entries"
+            ] + adjusted_entries
 
     # Fallback (depth 0)
     final_entries = filter_entries(0)
     print(f"Note: Limited to depth 0 with {len(final_entries)} entries")
-    return [f"Note: Limited to depth 0 with {len(final_entries)} entries"] + final_entries
+    return [
+        f"Note: Limited to depth 0 with {len(final_entries)} entries"
+    ] + final_entries
 
 
 @tool
-def view_directory_path(path: Annotated[str, "File path relative to git root"]) -> List[str]:
+def view_directory_path(
+    path: Annotated[str, "File path relative to git root"],
+) -> List[str]:
     """View the file structure of the repository at path"""
 
     # code.interact('view_directory_path', local=dict(locals(), **globals()))
@@ -395,7 +434,10 @@ def view_file_content(
     """
     rc = runtime_config.RuntimeConfig()
     assert rc.initialized
-    print('view_file_content: path:%s file_name="%s" view_range=%s' % (rc.proj_path, file_name, view_range))
+    print(
+        'view_file_content: path:%s file_name="%s" view_range=%s'
+        % (rc.proj_path, file_name, view_range)
+    )
     if rc.runtime_type == runtime_config.RuntimeType.LOCAL:
         full_file_path = os.path.join(rc.proj_path, file_name)
         if not os.path.isfile(full_file_path):
@@ -413,21 +455,29 @@ def view_file_content(
         raise NotImplementedError
 
     # FILE_CONTENT_TRUNCATED_NOTICE = '<response clipped><NOTE>Due to the max output limit, only part of this file has been shown to you. You should retry this tool after you have searched inside the file with the `search_file_by_keywords` tool or `view_file_structure` tool in order to find the line numbers of what you are looking for, and then use this tool with view_range.</NOTE>'
-    FILE_CONTENT_TRUNCATED_NOTICE = '<response clipped><NOTE>Due to the max output limit, only part of this file has been shown to you. You should retry this tool after you have searched inside the file with the `search_file_by_keywords` tool or view the file structure below in order to find the line numbers of what you are looking for, and then use this tool with view_range.</NOTE>'
+    FILE_CONTENT_TRUNCATED_NOTICE = "<response clipped><NOTE>Due to the max output limit, only part of this file has been shown to you. You should retry this tool after you have searched inside the file with the `search_file_by_keywords` tool or view the file structure below in order to find the line numbers of what you are looking for, and then use this tool with view_range.</NOTE>"
     if len(file_content) > MAX_RESPONSE_LEN_CHAR:
         truncated = True
     else:
         truncated = False
-    snippet_content = file_content if not truncated else file_content[:MAX_RESPONSE_LEN_CHAR] + FILE_CONTENT_TRUNCATED_NOTICE
+    snippet_content = (
+        file_content
+        if not truncated
+        else file_content[:MAX_RESPONSE_LEN_CHAR] + FILE_CONTENT_TRUNCATED_NOTICE
+    )
     snippet_content = snippet_content.expandtabs()
 
     if view_range:
         start_line, end_line = view_range
         snippet_content = "\n".join(
-            [f"{i + start_line:6}\t{line}" for i, line in enumerate(snippet_content.split("\n"))]
+            [
+                f"{i + start_line:6}\t{line}"
+                for i, line in enumerate(snippet_content.split("\n"))
+            ]
         )
 
     return snippet_content
+
 
 @tool
 def view_files_content(
@@ -488,7 +538,9 @@ def apply_git_diff_local(patch):
             text=True,
             shell=True,
         )
-        err_code, _ = process.communicate(f"cat {tmp_f_name} | {git_apply_cmd}\necho $?")
+        err_code, _ = process.communicate(
+            f"cat {tmp_f_name} | {git_apply_cmd}\necho $?"
+        )
         print(err_code)
         if err_code.splitlines()[-1].strip() == "0":
             applied_patch = True
@@ -507,6 +559,7 @@ def apply_git_diff(patch):
     else:
         raise NotImplementedError
 
+
 def extract_git_diff_local():
     rc = runtime_config.RuntimeConfig()
     print("extracting git diff local")
@@ -524,7 +577,9 @@ def extract_git_diff_local():
         text=True,
         shell=True,
     )
-    out, err = process.communicate("git -c core.fileMode=false diff --exit-code --no-color")
+    out, err = process.communicate(
+        "git -c core.fileMode=false diff --exit-code --no-color"
+    )
     return out
 
 
@@ -533,11 +588,13 @@ def save_git_diff():
     print("Saving git diff")
     rc = runtime_config.RuntimeConfig()
 
-    
     git_diff_output_before = extract_git_diff_local()
     instance_id = rc.proj_name.replace("/", "+")
 
-    patch_path = os.path.join(PATCH_RESULT_DIR, instance_id + "@" + str(int(time.time()))) + ".patch"
+    patch_path = (
+        os.path.join(PATCH_RESULT_DIR, instance_id + "@" + str(int(time.time())))
+        + ".patch"
+    )
 
     with open(patch_path, "w", encoding="utf-8") as save_file:
         save_file.write(git_diff_output_before)
@@ -548,11 +605,13 @@ def save_git_diff():
 # %%
 @tool
 def run_shell_cmd(
-    commands: Annotated[List[str], "A list of shell commands to be run in sequential order"],
+    commands: Annotated[
+        List[str], "A list of shell commands to be run in sequential order"
+    ],
     config: RunnableConfig,
 ) -> str:
     """Run a list of shell commands in sequential order and return the stdout results, your working directory is the root of the project"""
-    
+
     proj_path = config.get("configurable", {}).get("proj_path")
     if proj_path is None:
         rc = runtime_config.RuntimeConfig()
@@ -578,28 +637,13 @@ def run_shell_cmd(
 
     else:
         raise NotImplementedError
+
+
 if __name__ == "__main__":
-    rc = runtime_config.RuntimeConfig()
-    rc.load_from_github_issue_url("https://github.com/gitpython-developers/GitPython/issues/1977")
+    runtime_config = runtime_config.RuntimeConfig()
+    runtime_config.load_from_github_issue_url(
+        "https://github.com/gitpython-developers/GitPython/issues/1977"
+    )
 
-    # write a test for get_file_signature with above config
-    # print(view_directory({'dir_path': './sphinx/'}))
-    # print(view_file_content({'file_name': 'django/forms/fields.py'}))
-    print("-" * 50)
-    print(view_file_structure({'file_path': 'django/forms/fields.py'}))
-    
-    # print(view_file_content({'file_name': 'sphinx/roles.py', 'view_range': [200, 400]}))
-    # print(view_file_structure({'file_path': 'sphinx/roles.py'}))
-
-    # print("=" * 50)
-    # rc.pretty_print_runtime()
-    # print("=" * 50)
-    # regex = r"viewcode(_enable_epub)?\b"
-    # print("=" * 50)
-    # print(search_files_by_keywords({'directory': './', 'keywords': [regex]}))
-
-    # print(apply_git_diff(PLACE_HOLDER_PATCH))
-
-    # print(extract_git_diff_local())
 
 # %%
