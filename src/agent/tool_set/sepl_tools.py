@@ -10,7 +10,6 @@ from langchain_core.tools import tool
 from langchain_core.runnables import RunnableConfig
 
 from agent import runtime_config
-from agent.runtime_config import RuntimeType
 from agent.constant import PATCH_RESULT_DIR, RUNTIME_DIR
 
 MAX_LIST_FILES = 50  # the maximum number of files to return

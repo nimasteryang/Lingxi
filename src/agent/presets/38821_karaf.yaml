@@ -1,6 +1,0 @@
-!!python/object:agent.utils.ConfigPreset
-project_name: "Talend/karaf/"
-issue_id: -1  
-checkout_commit: '6c239dec9739c1e245e6e991aff7c51a307e76eb' 
-# parent commit of fix https://github.com/ant-media/StreamApp/commit/abc3f51d34529dc2c3cdba5d578c2d7655c2f159 
-issue_description: >

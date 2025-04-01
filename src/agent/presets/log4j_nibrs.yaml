@@ -1,6 +1,0 @@
-!!python/object:agent.utils.ConfigPreset
-project_name: "lucassasha/nibrs"
-issue_id: -1  
-checkout_commit: '6eec560a0ebda3502cdf2ed555693ffbdb11feff' 
-# parent commit of fix https://github.com/ant-media/StreamApp/commit/abc3f51d34529dc2c3cdba5d578c2d7655c2f159 
-issue_description: >

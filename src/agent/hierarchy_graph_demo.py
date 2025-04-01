@@ -11,20 +11,26 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.prebuilt import create_react_agent
 from langgraph.types import Command, interrupt
 from typing_extensions import TypedDict
-from agent.context_tools import search_relevant_files, summarizer
+from agent.tool_set.context_tools import search_relevant_files, summarizer
 from agent.runtime_config import RuntimeConfig
 from agent.llm import llm
 from agent.prompt import (
     ISSUE_RESOLVE_REVIEWER_SYSTEM_PROMPT,
     ISSUE_RESOLVE_MAM_SYSTEM_PROMPT,
 )
-from agent.sepl_tools import (
+from agent.tool_set.sepl_tools import (
     save_git_diff,
     view_file_content,
     view_directory
 )
 from agent.state import CustomState
 from agent.tool_set.edit_tool import str_replace_editor
+from agent.tool_set.context_tools import search_relevant_files, summarizer
+from agent.tool_set.sepl_tools import (
+    save_git_diff,
+    view_file_content,
+    view_directory
+)
 from agent.utils import message_processor_mk
 from agent.supervisor_graph_demo import issue_resolve_graph
 
@@ -81,7 +87,7 @@ reviewer_agent = create_react_agent(
     state_modifier=ISSUE_RESOLVE_REVIEWER_SYSTEM_PROMPT,
 )
 
-def reviewer_node(state: CustomState) -> Command[Literal["mam"]]:
+def reviewer_node(state: CustomState) -> Command[Literal["mam_node"]]:
     result = reviewer_agent.invoke(state)
     new_messages = result["messages"][len(state["messages"]) :]
     last_message = new_messages[-1]
@@ -92,16 +98,16 @@ def reviewer_node(state: CustomState) -> Command[Literal["mam"]]:
 
     return Command(
         update={"messages": last_message},
-        goto="mam",
+        goto="mam_node",
     )
 
 
 builder = StateGraph(CustomState)
-builder.add_node("issue_resolve_graph", issue_resolve_graph,destinations=({"mam":"mam-issue_resolve_graph"}))
-builder.add_node("mam", mam_node,destinations=({"reviewer_node":"mam-reviewer_node","issue_resolve_graph":"mam-issue_resolve_graph"}))
-builder.add_edge(START, "mam")
-builder.add_node("reviewer_node", reviewer_node,destinations=({"mam":"mam-reviewer_node"}))
-builder.add_edge("issue_resolve_graph", "mam")
+builder.add_node("issue_resolve_graph", issue_resolve_graph,destinations=({"mam_node":"mam_node-issue_resolve_graph"}))
+builder.add_node("mam_node", mam_node,destinations=({"reviewer_node":"mam_node-reviewer_node","issue_resolve_graph":"mam_node-issue_resolve_graph"}))
+builder.add_node("reviewer_node", reviewer_node,destinations=({"mam_node":"mam_node-reviewer_node"}))
+builder.add_edge(START, "mam_node")
+builder.add_edge("issue_resolve_graph", "mam_node")
 
 
 hierarchy_graph = builder.compile()
@@ -119,6 +125,7 @@ if __name__ == "__main__":
         "recursion_limit": 100,
         "run_id": uuid.uuid4(),
         "tags": ["interrupt"],
+        "configurable": {"thread_id": "1"},
     }
     initial_input = {"messages":[HumanMessage(content="https://github.com/gitpython-developers/GitPython/issues/1413")], "preset": "https://github.com/gitpython-developers/GitPython/issues/1413", "human_in_the_loop": False}
 

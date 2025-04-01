@@ -11,7 +11,7 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.prebuilt import create_react_agent
 from langgraph.types import Command, interrupt
 from typing_extensions import TypedDict
-from agent.context_tools import search_relevant_files, summarizer
+from agent.tool_set.context_tools import search_relevant_files, summarizer
 from agent.runtime_config import RuntimeConfig
 from agent.llm import llm
 from agent.prompt import (
@@ -22,13 +22,19 @@ from agent.prompt import (
     ISSUE_RESOLVE_SUPERVISOR_SYSTEM_PROMPT,
     
 )
-from agent.sepl_tools import (
+from agent.tool_set.sepl_tools import (
     save_git_diff,
     view_file_content,
     view_directory
 )
 from agent.state import CustomState
 from agent.tool_set.edit_tool import str_replace_editor
+from agent.tool_set.context_tools import search_relevant_files, summarizer
+from agent.tool_set.sepl_tools import (
+    save_git_diff,
+    view_file_content,
+    view_directory
+)
 from agent.utils import message_processor_mk
 
 rc = RuntimeConfig()
@@ -256,7 +262,7 @@ def problem_solver_node(state: CustomState) -> Command[Literal["supervisor"]]:
 memory = MemorySaver()
 builder = StateGraph(CustomState)
 builder.add_edge(START, "input_handler")
-builder.add_node("input_handler", input_handler_node)
+builder.add_node("input_handler", input_handler_node, destinations=({"supervisor":"supervisor-input_handler"}))
 builder.add_node("human_feedback", human_feedback_node,destinations=("problem_decoder", "solution_mapper", "problem_solver"))
 builder.add_node("problem_decoder", problem_decoder_node,destinations=({"supervisor":"supervisor-decoder"}))
 builder.add_node("solution_mapper", solution_mapper_node,destinations=({"supervisor":"supervisor-mapper"}))
@@ -275,16 +281,13 @@ if __name__ == "__main__":
     # when using input_handler_node, no need to initialized
     os.environ["LANGSMITH_TRACING"] = "true"
     thread = {
-        "recursion_limit": 50,
-        "configurable": {"thread_id": "1"},
+        "recursion_limit": 100,
         "run_id": uuid.uuid4(),
         "tags": ["interrupt"],
-        "run_name": "test interrupt no tool msg",
+        "configurable": {"thread_id": "1"},
     }
-    initial_input = {
-        "messages": [HumanMessage(content="sympy__sympy-20212")],
-        "human_in_the_loop": False,
-    }
-    #     # %%
-    for chunk in graph.stream(initial_input, config=thread, stream_mode="values"):
-        chunk["messages"][-1].pretty_print()
+    initial_input = {"messages":[HumanMessage(content="https://github.com/gitpython-developers/GitPython/issues/1413")], "preset": "https://github.com/gitpython-developers/GitPython/issues/1413", "human_in_the_loop": False}
+
+    for chunk in issue_resolve_graph.stream(initial_input, config=thread, stream_mode="values"):
+        if "messages" in chunk and len(chunk["messages"]) > 0:
+            chunk["messages"][-1].pretty_print()

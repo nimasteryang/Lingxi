@@ -1,7 +1,0 @@
-!!python/object:agent.utils.ConfigPreset
-project_name: "ihmcrobotics/simulation-construction-set-2"
-issue_id: -1  
-checkout_commit: '91da8f80ec7d120bcf48b4a5ebc3d6a3e34255d8' 
-# this is an indirect vulnerable program, the fix is at https://github.com/ihmcrobotics/simulation-construction-set-2/commit/ff889939f9cb91e6ff6048288426aa0e6ca68ece
-issue_description: >
-

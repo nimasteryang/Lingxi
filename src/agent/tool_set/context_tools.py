@@ -26,8 +26,8 @@ from agent.prompt import (
     FILTER_CONVO_HISTORY_SYSTEM_PROMPT_V2,
     RELEVANT_FILE_EXPLANATION_SYSTEM_PROMPT,
 )
-from agent.repo_knowledge_tools import RepoKnowledge
-from agent.sepl_tools import (
+from agent.tool_set.repo_knowledge_tools import RepoKnowledge
+from agent.tool_set.sepl_tools import (
     save_git_diff,
     view_directory,
     view_file_content,

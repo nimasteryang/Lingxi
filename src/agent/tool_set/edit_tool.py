@@ -5,8 +5,8 @@ from langgraph.prebuilt import InjectedState
 from langgraph.prebuilt.chat_agent_executor import AgentState
 from agent.state import CustomState
 
-from agent import runtime_config
-from agent.sepl_tools import save_git_diff
+from agent.runtime_config import RuntimeConfig
+from agent.tool_set.sepl_tools import save_git_diff
 from agent.tool_set.oheditor import CLIResult, OHEditor
 from langchain_core.runnables import RunnableConfig
 _GLOBAL_EDITOR = OHEditor()

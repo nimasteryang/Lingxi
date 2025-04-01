@@ -1,6 +1,0 @@
-!!python/object:agent.utils.ConfigPreset
-project_name: "apache/kafka"
-issue_id: -1  
-checkout_commit: '1b7ab8eb9fefc238c48c94130dda38563143c74b' 
-# parent commit of fix https://github.com/ant-media/StreamApp/commit/abc3f51d34529dc2c3cdba5d578c2d7655c2f159 
-issue_description: >

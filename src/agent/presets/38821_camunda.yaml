@@ -1,6 +1,0 @@
-!!python/object:agent.utils.ConfigPreset
-project_name: "camunda/camunda/"
-issue_id: -1  
-checkout_commit: '7a32828913049774740bb8617b0999bb87780f2d' 
-# parent commit of fix https://github.com/ant-media/StreamApp/commit/abc3f51d34529dc2c3cdba5d578c2d7655c2f159 
-issue_description: >

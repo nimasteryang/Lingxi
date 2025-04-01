@@ -13,7 +13,9 @@ from git import Repo
 from prompt_toolkit import prompt
 from prompt_toolkit.completion import FuzzyWordCompleter
 
-from agent.constant import PRESET_DIR, PRESET_OPTIONS, RUNTIME_DIR
+from agent.constant import RUNTIME_DIR
+from agent.tool_set.sepl_tools import extract_git_diff_local
+from agent.tool_set.sepl_tools import apply_git_diff
 
 
 class RuntimeType(Enum):
@@ -33,11 +35,6 @@ class RuntimeType(Enum):
                     return member
         raise ValueError(f"{value} is not a valid {cls.__name__}")
 
-
-PRESET = "gitpython-developers+GitPython@1413.yaml"
-
-
-assert PRESET in PRESET_OPTIONS, f"{PRESET} not found in {PRESET_DIR}"
 
 
 def load_env_config():
@@ -193,8 +190,6 @@ class RuntimeConfig:
         self.commit_head = repo.commit().hexsha
 
     def dump_config(self):
-        from agent.sepl_tools import extract_git_diff_container, extract_git_diff_local
-
         if self.runtime_type == RuntimeType.LOCAL:
             extract_git_diff = extract_git_diff_local
         else:
@@ -208,8 +203,6 @@ class RuntimeConfig:
         }
 
     def load_from_dump_config(self, config):
-        from agent.sepl_tools import apply_git_diff
-
         if config["runtime_type"] == int(RuntimeType.LOCAL):
             if config["preset"]:
                 print("=== Loading config with preset")
