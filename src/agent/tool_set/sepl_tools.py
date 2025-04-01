@@ -275,7 +275,7 @@ def view_directory(dir_path: str = "./", depth: Optional[int] = None) -> List[st
 
     # Fetch all files in the repository
     file_list = []
-    if rc.runtime_type == RuntimeType.LOCAL:
+    if rc.runtime_type == runtime_config.RuntimeType.LOCAL:
         repo = Repo(rc.proj_path)
         file_list = [entry.path for entry in repo.commit().tree.traverse()]
     else:
@@ -396,7 +396,7 @@ def view_file_content(
     rc = runtime_config.RuntimeConfig()
     assert rc.initialized
     print('view_file_content: path:%s file_name="%s" view_range=%s' % (rc.proj_path, file_name, view_range))
-    if rc.runtime_type == RuntimeType.LOCAL:
+    if rc.runtime_type == runtime_config.RuntimeType.LOCAL:
         full_file_path = os.path.join(rc.proj_path, file_name)
         if not os.path.isfile(full_file_path):
             raise ValueError(f"file_name: '{file_name}' doesn't exist!")
@@ -460,7 +460,7 @@ def view_files_content(
 def apply_git_diff_local(patch):
     rc = runtime_config.RuntimeConfig()
     assert rc.initialized, "Configuration is not initialized!"
-    assert rc.runtime_type == RuntimeType.LOCAL
+    assert rc.runtime_type == runtime_config.RuntimeType.LOCAL
 
     GIT_APPLY_CMDS = [
         "git apply --verbose",
@@ -502,7 +502,7 @@ def apply_git_diff(patch):
     rc = runtime_config.RuntimeConfig()
     assert rc.initialized, "Configuration is not initialized!"
 
-    if rc.runtime_type == RuntimeType.LOCAL:
+    if rc.runtime_type == runtime_config.RuntimeType.LOCAL:
         return apply_git_diff_local(patch)
     else:
         raise NotImplementedError
@@ -562,7 +562,7 @@ def run_shell_cmd(
     else:
         print(f"use configrable config project path: {proj_path}")
 
-    if rc.runtime_type == RuntimeType.LOCAL:
+    if rc.runtime_type == runtime_config.RuntimeType.LOCAL:
         import subprocess
 
         process = subprocess.Popen(

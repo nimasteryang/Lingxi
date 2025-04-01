@@ -17,24 +17,6 @@ class ConfigPreset:
     checkout_commit: str
     issue_description: str
 
-
-def get_cve_id_from_preset(preset):
-    if "38821" in preset:
-        cve = "CVE-2024-38821"
-    elif "log4j" in preset:
-        cve = "CVE-2021-44228"
-    elif "50164" in preset:
-        cve = "CVE-2023-50164"
-    else:
-        assert "unknown cve", preset
-    return cve
-
-
-def cve_from_str(input_str):
-    cve_pattern = r"CVE-\d{4}-\d{4,7}"
-    return re.findall(cve_pattern, input_str)
-
-
 def graph_print_update(update):
     for k, v in update.items():
         for m in v["messages"]:
