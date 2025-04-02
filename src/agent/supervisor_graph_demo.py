@@ -1,3 +1,7 @@
+"""
+Demonstrates the supervisor based graph for fixing issue reports.
+"""
+
 # %%
 import os
 from typing import Literal
@@ -55,7 +59,7 @@ def input_handler_node(state: CustomState) -> Command[Literal["supervisor"]]:
     """in issue solving, input handler will take input of
     1.swe-bench id,
     2.issue link and setup the env accordingly"""
-    user_input = state["preset"]
+    user_input = state["messages"][0].content
     if "/issues/" in user_input:
         # the input are github link
         rc.load_from_github_issue_url(user_input)

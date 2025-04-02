@@ -1,3 +1,7 @@
+"""
+Defines the LLM based on the `LLM_PROVIDER` and `LLM_MODEL` env vars.
+"""
+
 import os
 
 from langchain_anthropic import ChatAnthropic
@@ -12,11 +16,11 @@ from agent.runtime_config import load_env_config
 
 set_llm_cache(SQLiteCache(database_path=".langchain.db"))
 
-
 load_env_config()
 
 
 def create_llm():
+    """Creates the LLM according to `LLM_PROVIDER` and `LLM_MODEL` env vars"""
     created_llm = None
     llm_provider = os.getenv("LLM_PROVIDER")
     if not llm_provider:

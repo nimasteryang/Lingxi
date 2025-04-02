@@ -1,3 +1,7 @@
+"""
+Defines various util functions for the prototype."""
+
+
 class UndefinedValueError(ValueError):
     """
     A custom exception raised when a variable is not defined.

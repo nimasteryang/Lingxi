@@ -1,3 +1,14 @@
+"""
+Utility functions for interacting with the GitHub API.
+
+This module provides helper methods to collect and process
+git-related information such as issue reports, repository details,
+and other GitHub-specific data retrieval operations.
+
+Several Functions in this module require proper GitHub API authentication
+and some may depend on the external library`requests`.
+"""
+
 import logging
 import os
 import re
@@ -6,8 +17,6 @@ import dotenv
 import requests
 
 from agent.constant import REQUEST_TIMEOUT
-
-# load dotenv
 
 dotenv.load_dotenv(
     os.path.join(
@@ -43,6 +52,13 @@ def parse_github_issue_url(issue_url):
 
 
 def get_issue_description(owner, project, issue):
+    """Retrieve the issue description
+    Args:
+        owner (str): Owner of the project
+        project (str): Name of the project
+        issue (Union[str, int]): Issue ID
+    Returns:
+        issue_description (str): The corresponding issue description."""
     issue_api_url = f"https://api.github.com/repos/{owner}/{project}/issues/{issue}"
 
     response = requests.get(issue_api_url, headers=headers, timeout=REQUEST_TIMEOUT)
@@ -75,6 +91,13 @@ def get_issue_details(url_):
 
 # Main logic
 def get_issue_close_commit(owner, project, issue):
+    """Retrieves the commit that closed the pull request corresponding to a given issue.
+    Args:
+        owner (str): Owner of the project
+        project (str): Name of the project
+        issue (Union[str, int]): Issue ID
+    Returns:
+        commit_id_to_return (str): The corresponding commit SHA."""
     # Fetch the issue details
     issue_url = f"https://api.github.com/repos/{owner}/{project}/issues/{issue}"
     event_url = f"https://api.github.com/repos/{owner}/{project}/issues/{issue}/events"

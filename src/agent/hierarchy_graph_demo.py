@@ -20,11 +20,16 @@ from agent.runtime_config import RuntimeConfig
 from agent.state import CustomState
 from agent.supervisor_graph_demo import issue_resolve_graph
 from agent.tool_set.context_tools import search_relevant_files
-from agent.tool_set.sepl_tools import view_file_content, view_directory
+from agent.tool_set.sepl_tools import view_file_content, view_directory, run_shell_cmd
 
 rc = RuntimeConfig()
 
-reviewer_tools = [view_directory, search_relevant_files, view_file_content]
+reviewer_tools = [
+    view_directory,
+    search_relevant_files,
+    view_file_content,
+    run_shell_cmd,
+]
 
 dotenv.load_dotenv(
     os.path.join(

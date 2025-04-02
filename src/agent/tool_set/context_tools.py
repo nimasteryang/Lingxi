@@ -1,3 +1,5 @@
+"""Defines context management tools"""
+
 from glob import glob
 import os
 
@@ -27,10 +29,10 @@ if "OPENAI_API_KEY" not in os.environ:
 EMBEDDING_FUNCTION = OpenAIEmbeddings(
     api_key=os.environ.get("OPENAI_API_KEY"),
     model="text-embedding-3-small",
-)
+)  # Defines the embedding model to use for the VectorDB with use of the `search_relevant_files` tool.
 PROJECT_KNOWLEDGE_TEXT_SPLITTER = RecursiveCharacterTextSplitter(
     chunk_size=1000, chunk_overlap=256, separators=["\n"]
-)
+)  # Defines the text splitter for the Vector DB with use of the `search_relevant_files` tool.
 
 
 def create_project_knowledge(

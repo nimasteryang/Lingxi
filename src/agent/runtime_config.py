@@ -1,7 +1,6 @@
 """
-config
-
-location to store all configuration information
+Handles all runtime environment configuration setup.
+Currently supports loading runtime environment using a GitHub issue URL.
 """
 
 import os
@@ -85,6 +84,9 @@ class RuntimeConfig:
         self.runtime_setup()
 
     def load_from_github_issue_url(self, issue_url):
+        """Setup the runtime config based on a given issue UR;
+        Args:
+            issue_url (str): The given issue URL"""
         from agent.github_utils import (
             get_issue_close_commit,
             get_issue_description,

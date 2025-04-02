@@ -1,3 +1,9 @@
+"""
+Defines several constant variables used throughout the prototype.
+These constants include configuration settings, default values, and
+other immutable parameters used across different components of the system.
+"""
+
 import os
 
 import tree_sitter_java as tsjava
@@ -6,16 +12,12 @@ from tree_sitter import Language, Parser
 
 RUNTIME_DIR = os.path.join(os.environ["HOME"], "Tmp", "swe-runtime")
 
-
-CHECKPOINTER_DB = os.path.join(RUNTIME_DIR, "checkpointer.db")
-
 PATCH_RESULT_DIR = os.path.join(RUNTIME_DIR, "results")
 os.makedirs(PATCH_RESULT_DIR, exist_ok=True)
 
-MEMORY_CONFIG = {"configurable": {"thread_id": "1"}}
+REQUEST_TIMEOUT = 30
 
-base_path = os.path.join(os.path.dirname(__file__), "samples")
-
+# Tree-sitter parser and query definitions used for indexing
 PY_LANGUAGE = Language(tspython.language())
 JAVA_LANGUAGE = Language(tsjava.language())
 
@@ -59,5 +61,3 @@ index 00000000..3372b06d
 @@ -0,0 +1 @@
 +random text fillering, no meaning
 """
-
-REQUEST_TIMEOUT = 30
