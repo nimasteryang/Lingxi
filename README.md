@@ -24,14 +24,15 @@
 	- `uv run --env-file .env langgraph dev --no-reload` (if using `uv`)
 - The prototype will create a local instance of LangGraph Studio and will open a browser instance to the page once the prototype is run
 - Once in the UI, select the graph to run at the top left
-![[GraphSelect.png]]
+
+![Graph Select](imgs/GraphSelect.png)
 
 - Add a Message by clicking "+ Message" button, and add the Github issue URL. An example URL is: https://github.com/gitpython-developers/GitPython/issues/1977
-![[AddMsg.png]]
+![Add Msg](imgs/AddMsg.png)
 
 - Finally click the Submit button
 - Note that human feedback functionality is disabled be default, it can be enabled by clicking the checkbox in the LangGraph Studio UI before submitting the issue URL:
-![[Pasted image 20250402150326.png]]
+![Graph1](imgs/HILenable.png)
 # Agents
 - The prototype currently consists of five main agents across the graphs and implemented in various LangGraph nodes
 ## Multi-Agent Manager
@@ -79,7 +80,7 @@
 - Read the content of the specified file.
     Parameters:
         file_name (str): File name relative to the git root directory.
-        view_range (Optional[List[int]]): Optional list containing [start_line, end_line] to limit the lines displayed.
+        view_range (Optional[List[int]): Optional list containing [start_line, end_line] to limit the lines displayed.
     Usage:
         - LLM should initially attempt to read the entire file content.
         - If the file is too large, LLM can use the `view_file_structure` tool to identify relevant code ranges,
@@ -120,7 +121,7 @@
         old_str (Optional[str]): Required parameter of `str_replace` command containing the string in `path` to replace.
         new_str (Optional[str]): Optional parameter of `str_replace` command containing the new string (if not given, no string will be added). Required parameter of `insert` command containing the string to insert.
         insert_line (Optional[int]): Required parameter of `insert` command. The `new_str` will be inserted AFTER the line `insert_line` of `path`.
-        view_range (Optional[List[int]]): Optional parameter of `view` command when `path` points to a file. If none is given, the full file is shown. If provided, the file will be shown in the indicated line number range, e.g. [100, 600] will show content between line 100 and 600. Indexing at 1 to start. Setting `[start_line, -1]` shows all lines from `start_line` to the end of the file. Unless you are sure about the line numbers, otherwise, do not set this parameter and use the `view` command to view the whole file.
+        view_range (Optional[List[int]): Optional parameter of `view` command when `path` points to a file. If none is given, the full file is shown. If provided, the file will be shown in the indicated line number range, e.g. [100, 600] will show content between line 100 and 600. Indexing at 1 to start. Setting `[start_line, -1]` shows all lines from `start_line` to the end of the file. Unless you are sure about the line numbers, otherwise, do not set this parameter and use the `view` command to view the whole file.
 - Defined in `src/agent/tool_set/edit_tool.py`
 
 
@@ -131,7 +132,7 @@
 	2. `src/agent/hierarchy_graph_demo.py`
 
 ## Supervisor Graph
-![[Pasted image 20250402102105.png]]
+![Graph1](imgs/graph1.png)
 - This graph defines a workflow to resolve an issue given the issue requirements, with use of a supervisor agent and integrated with human feedback
 - The graph is defined in the `issue_resolve_graph` variable and contains the following six nodes:
 	1. `input_handler_node`: This node handles the start of the workflow by setting up the runtime environment given the Github issue report URL.
@@ -146,11 +147,11 @@
 
 
 ## Hierarchy Graph
-![[Pasted image 20250402102205.png]]
-- This graph defines a workflow also to resolve an issue, though also implements a multi-agent manager to coordinate between an issue resolver agent (i.e. the graph from [[CodeXRay Lite Documentation#Supervisor Graph]]) and a reviewer agent, to review the result of the issue resolver agent, and also includes human feedback.
+![Graph2](imgs/graph2.png)
+- This graph defines a workflow also to resolve an issue, though also implements a multi-agent manager to coordinate between an issue resolver agent (i.e. the graph from [[CodeXRay Lite Documentation#Supervisor Graph]) and a reviewer agent, to review the result of the issue resolver agent, and also includes human feedback.
 - The graph is defined in the `hierarchy_graph` variable and contains the following three nodes:
 	1. `mam_node`: This node executes the multi-agent manager agent.
-	2. `issue_resolve_graph`: This node executes the issue resolver agent, combining all nodes and agents defined in [[CodeXRay Lite Documentation#Supervisor Graph]]
+	2. `issue_resolve_graph`: This node executes the issue resolver agent, combining all nodes and agents defined in [[CodeXRay Lite Documentation#Supervisor Graph]
 	3. `reviewer_node`: This node executes the reviewer agent.
 
 # Development
@@ -174,7 +175,7 @@ response = llm.invoke(["What is 2+2", "What is the previous result times 5"]) # 
 ```
 ### ReACT Agents
 - These agents are defined with tools which they will decide to use on their own time
-- In this case, the agent should be created using [`create_react_agent`](https://langchain-ai.github.io/langgraph/reference/prebuilt/#langgraph.prebuilt.chat_agent_executor.create_react_agent), and will expect different input (see [[CodeXRay Lite Documentation#Agent Expected Input and State]])
+- In this case, the agent should be created using [`create_react_agent`](https://langchain-ai.github.io/langgraph/reference/prebuilt/#langgraph.prebuilt.chat_agent_executor.create_react_agent), and will expect different input (see [[CodeXRay Lite Documentation#Agent Expected Input and State])
 ```python
 from langchain_anthropic import ChatAnthropic
 from langgraph.prebuilt import create_react_agent
@@ -192,7 +193,7 @@ problem_solver_agent.invoke({"messages": [
 ]}) # How to invoke the agent using user prompt "What is 2+2"
 ```
 - ReACT agents also create a subgraph that includes the looks like so:
-![[Pasted image 20250402135525.png]]
+![Graph3](imgs/graph3.png)
 ### Agent Expected Input and LangGraph State
 - Different agent creation methods will expect different inputs
 - An agent without tools used directly from a class such as `ChatAnthropic` can  expect relatively flexible inputs:
@@ -321,9 +322,8 @@ problem_solver_agent.invoke({"messages": [
 	HumanMessage(content="What is 2 mutlipled by the max of this list: [5, 10, 15]")
 ]})
 ```
-
+- Step 6: Define the graph in langgraph.json
 ```json
-// Step 6: Define the graph in langgraph.json
 {
   "dependencies": ["."],
   "graphs": {
@@ -371,7 +371,7 @@ builder.add_edge("issue_resolve_graph", "mam_node") # Finally add the edge from 
 hierarchy_graph = builder.compile() # Compile the graph
 ```
 - Note that a subgraph is also created when creating a node that includes a ReACT based agent, and produces the following subgraph:
-![[Pasted image 20250402135525.png]]
+![Graph4](imgs/graph4.png)
 - The subgraph has the nodes including:
 	- `__start__`: Defines the start of the subgraph
 	- `agent`: The agent that was defined and will be used within the node
@@ -384,49 +384,49 @@ hierarchy_graph = builder.compile() # Compile the graph
 
 
 ## File Structure
-
+```
 .
 ├── langgraph.json
 ├── pyproject.toml
 ├── src
-│   └── agent
-│       ├── constant.py
-│       ├── github_utils.py
-│       ├── hierarchy_graph_demo.py
-│       ├── __init__.py
-│       ├── llm.py
-│       ├── parsers.py
-│       ├── prompt
-│       │   ├── context_manager.py
-│       │   ├── __init__.py
-│       │   ├── mam.py
-│       │   ├── problem_decoder.py
-│       │   ├── problem_solver.py
-│       │   ├── reviewer.py
-│       │   ├── solution_mapper.py
-│       │   └── supervisor.py
-│       ├── runtime_config.py
-│       ├── state.py
-│       ├── supervisor_graph_demo.py
-│       ├── tool_set
-│       │   ├── constant.py
-│       │   ├── context_tools.py
-│       │   ├── edit_history.py
-│       │   ├── edit_tool.py
-│       │   ├── linter
-│       │   │   ├── base.py
-│       │   │   ├── impl
-│       │   │   │   ├── python.py
-│       │   │   │   ├── treesitter_compat.py
-│       │   │   │   └── treesitter.py
-│       │   │   ├── __init__.py
-│       │   │   ├── linter.py
-│       │   ├── oheditor.py
-│       │   ├── sepl_tools.py
-│       │   └── utils.py
-│       └── utils.py
-
-## /
+│   └── agent
+│       ├── constant.py
+│       ├── github_utils.py
+│       ├── hierarchy_graph_demo.py
+│       ├── __init__.py
+│       ├── llm.py
+│       ├── parsers.py
+│       ├── prompt
+│       │   ├── context_manager.py
+│       │   ├── __init__.py
+│       │   ├── mam.py
+│       │   ├── problem_decoder.py
+│       │   ├── problem_solver.py
+│       │   ├── reviewer.py
+│       │   ├── solution_mapper.py
+│       │   └── supervisor.py
+│       ├── runtime_config.py
+│       ├── state.py
+│       ├── supervisor_graph_demo.py
+│       ├── tool_set
+│       │   ├── constant.py
+│       │   ├── context_tools.py
+│       │   ├── edit_history.py
+│       │   ├── edit_tool.py
+│       │   ├── linter
+│       │   │   ├── base.py
+│       │   │   ├── impl
+│       │   │   │   ├── python.py
+│       │   │   │   ├── treesitter_compat.py
+│       │   │   │   └── treesitter.py
+│       │   │   ├── __init__.py
+│       │   │   ├── linter.py
+│       │   ├── oheditor.py
+│       │   ├── sepl_tools.py
+│       │   └── utils.py
+│       └── utils.py
+```
+## Dir /
 ### langgraph.json
 - Defines configuration for the execution of the `langgraph dev` command, currently including:
 	- The Python file(s) containing LangGraph graphs and the variable name(s) in the corresponding file(s) defining the graph
@@ -435,7 +435,7 @@ hierarchy_graph = builder.compile() # Compile the graph
 ### pyproject.toml
 - Defines all dependencies to run the prototype, which should be changed accordingly to corresponding additional dependencies
 
-## src/agent/
+## Dir src/agent/
 - Contains files defining the main workflow and structure of the prototype
 ### constant.py
 - Defines several constant variables used throughout the prototype.
@@ -461,18 +461,18 @@ hierarchy_graph = builder.compile() # Compile the graph
 	- `RuntimeConfig.load_from_github_issue_url`: Setup the runtime config based on a given issue UR;
 		Args:
 			issue_url: The given issue URL
-## state.py
+### state.py
 - Defines the custom state structures for the prototype.
-## utils.py
+### utils.py
 - Defines various util functions for the prototype.
-## src/agent/prompt/
+## Dir src/agent/prompt/
 - Contains files defining the prompts for each agent, and prompts for other steps of the prototype (multi-agent manager, supervisor, problem decoder, solution mapper, problem solver, reviewer)
 
 ### context_manager.py
 - Contains prompts relevant to context management
 - `RELEVANT_FILE_EXPLANATION_SYSTEM_PROMPT`: A prompt used in `search_relevant_files` tool to ask LLM to explain the relevancy of files retrieved from the vector DB.
 
-## src/agent/tool_set/
+## Dir src/agent/tool_set/
 - Contains files defining the tools used by agents
 ### constant.py
 - Defines several constant variables used throughout the tools. 
@@ -506,7 +506,7 @@ hierarchy_graph = builder.compile() # Compile the graph
 ### utils.py
 - Defines util functions used by OHEditor
 - Adapted from OpenHands file editor. For more information refer to https://github.com/All-Hands-AI/openhands-aci/blob/main/openhands_aci/editor/editor.py
-## src/agent/tool_set/linter/
+## Dir src/agent/tool_set/linter/
 - Defines functionality for the linter used in OHEditor
 - Adapted from Aider linter. For more information refer to https://github.com/paul-gauthier/aider/blob/main/aider/linter.py
 
