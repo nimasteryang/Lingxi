@@ -62,7 +62,7 @@
 - Prompt in `src/agent/prompt/reviewer.py`
 
 # Tools
-- There are four main tools are defined and used by multiple agents in the workflow of the prototype
+- There are five main tools are defined and used by multiple agents in the workflow of the prototype
 - Note that tools used by agents are:
 	- Defined with the `@tool` wrapper
 	- Defined while constructing the agent via `create_react_agent` using`tools` parameters
@@ -370,9 +370,8 @@ builder.add_edge(START, "mam_node") # Define start
 builder.add_edge("issue_resolve_graph", "mam_node") # Finally add the edge from issue_resolve_graph and mam_node
 hierarchy_graph = builder.compile() # Compile the graph
 ```
-- Note that a subgraph is also created when creating a node that includes a ReACT based agent, and produces the following subgraph:
-![Graph4](imgs/graph4.png)
-- The subgraph has the nodes including:
+- Note that a subgraph is also created when creating a node that includes a ReACT based agent as mentioned above
+- A reACT agent subgraph consits of nodes including:
 	- `__start__`: Defines the start of the subgraph
 	- `agent`: The agent that was defined and will be used within the node
 	- `tools`: The tools bound to the agent via the `tools` kwarg
