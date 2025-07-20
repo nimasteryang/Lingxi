@@ -4,8 +4,14 @@
 # Intro
 **Lingxi** is an open‑source, multi‑agent framework designed to automate a broad range of software‑engineering tasks.
 
+
 # SWE-Bench support
-Lingxi's implementation of SWE-Bench will release soon, please see our technical report at [Lingxi Technical Report (PDF)](docs/Lingxi%20Technical%20Report%202505.pdf)
+
+🎉 Lingxi v1.5 resolve 74.6% on SWE-Bench Verified!
+
+
+
+Lingxi v1.5's implementation of SWE-Bench is in `src/workflow/knowledge_tts_for_swebench_workflow.py`. Please see our technical report at [Lingxi v1.5 Technical Report (PDF)](docs/Lingxi%20Technical%20Report%202505.pdf). Our paper will release soon!
 
 # Setup
 

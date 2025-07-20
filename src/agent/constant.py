@@ -10,7 +10,16 @@ import tree_sitter_java as tsjava
 import tree_sitter_python as tspython
 from tree_sitter import Language, Parser
 
+
+
+
 RUNTIME_DIR = os.path.join(os.environ["HOME"], "Tmp", "swe-runtime")
+
+DOCKER_MAP_DIR = os.path.join(RUNTIME_DIR, "docker_map")
+os.makedirs(DOCKER_MAP_DIR, exist_ok=True)
+
+REPO_MAP_DIR = os.path.join(RUNTIME_DIR, "repo_map")
+os.makedirs(REPO_MAP_DIR, exist_ok=True)
 
 PATCH_RESULT_DIR = os.path.join(RUNTIME_DIR, "results")
 os.makedirs(PATCH_RESULT_DIR, exist_ok=True)

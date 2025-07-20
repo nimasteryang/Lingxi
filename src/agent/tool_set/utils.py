@@ -1,20 +1,29 @@
 import subprocess
 import time
-from agent.tool_set.constant import *
+from typing import Any, Optional
+from langchain_core.runnables import RunnableConfig
+from src.agent import runtime_config
+from src.agent.tool_set.constant import *
 
-def maybe_truncate(
-    content: str,
-    truncate_after: int | None = MAX_RESPONSE_LEN_CHAR,
-    truncate_notice: str = CONTENT_TRUNCATED_NOTICE,
-) -> str:
+def get_runtime_config(config: Optional[RunnableConfig] = None) -> Any:
+    """Helper function to safely get runtime config.
+    
+    First tries to get runtime_object from config["configurable"]["runtime_object"].
+    Falls back to the global rc if not available.
+    
+    Args:
+        config: RunnableConfig object that might contain runtime_object
+        
+    Returns:
+        RuntimeConfig instance
     """
-    Truncate content and append a notice if content exceeds the specified length.
-    """
-    return (
-        content
-        if not truncate_after or len(content) <= truncate_after
-        else content[:truncate_after] + truncate_notice
-    )
+    if config and isinstance(config, dict) and "configurable" in config:
+        runtime_obj = config["configurable"].get("runtime_object")
+        if runtime_obj:
+            return runtime_obj
+    
+    # Fall back to global rc
+    return runtime_config.RuntimeConfig()
 
 def run_shell_local(
     cmd: str,
