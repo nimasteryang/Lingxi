@@ -11,7 +11,7 @@
 
 
 
-Lingxi v1.5's implementation of SWE-Bench is in `src/workflow/knowledge_tts_for_swebench_workflow.py`. Please see our technical report at [Lingxi v1.5 Technical Report (PDF)](docs/Lingxi%20Technical%20Report%202505.pdf). Our paper will release soon!
+Lingxi v1.5's implementation of SWE-Bench is in `src/workflow/knowledge_tts_for_swebench_workflow.py`. Please see our technical report at [Lingxi v1.5 Technical Report (PDF)](). Our paper will release soon!
 
 # Setup
 
