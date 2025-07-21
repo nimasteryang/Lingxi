@@ -10,8 +10,7 @@
 🎉 Lingxi v1.5 resolve 74.6% on SWE-Bench Verified!
 
 
-
-Lingxi v1.5's implementation of SWE-Bench is in `src/workflow/knowledge_tts_for_swebench_workflow.py`. Please see our technical report at [Lingxi v1.5 Technical Report (PDF)](). Our paper will release soon!
+Lingxi v1.5's implementation of SWE-Bench is in `src/workflow/knowledge_tts_for_swebench_workflow.py`. Please see our technical report at [Lingxi v1.5 Technical Report (PDF)](docs/Lingxi%20v1.5Technical%20Report%200725.pdf). Our paper will release soon!
 
 # Setup
 
